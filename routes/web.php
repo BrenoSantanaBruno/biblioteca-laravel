@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -35,21 +37,51 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-
+// OAuth2
 Route::get('/redirect', function (Request $request) {
     $request->session()->put('state', $state = Str::random(40));
 
     $query = http_build_query([
-        'client_id' => 'client-id',
-        'redirect_uri' => 'http://third-party-app.com/callback',
+        'client_id' => env('CLIENT_ID'),
+        'redirect_uri' => 'http://localhost/callback',
         'response_type' => 'code',
         'scope' => '',
         'state' => $state,
         // 'prompt' => '', // "none", "consent", or "login"
     ]);
 
-    return redirect('http://passport-app.test/oauth/authorize?'.$query);
+    return redirect('http://localhost/oauth/authorize?'.$query);
 });
+
+Route::get('/callback', function (Request $request) {
+    $state = $request->session()->pull('state');
+
+    throw_unless(
+        strlen($state) > 0 && $state === $request->state,
+        InvalidArgumentException::class,
+        'Invalid state value.'
+    );
+
+    $response = Http::asForm()->post('http://localhost/oauth/token', [
+        'grant_type' => 'authorization_code',
+        'client_id' => env('CLIENT_ID'),
+        'client_secret' => env('CLIENT_SECRET'),
+        'redirect_uri' => 'http://localhost/callback',
+        'code' => $request->code,
+    ]);
+
+    return $response->json();
+});
+
+
+
+$response = Http::asForm()->post('http://localhost/oauth/token', [
+    'grant_type' => 'refresh_token',
+    'refresh_token' => 'the-refresh-token',
+    'client_id' => env('CLIENT_ID'),
+    'client_secret' => env('CLIENT_SECRET'),
+    'scope' => '',
+]);
+
+return $response->json();
 require __DIR__.'/auth.php';
