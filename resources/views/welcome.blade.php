@@ -20,11 +20,11 @@
                 @if (Route::has('register'))
                     <a href="{{ route('register') }}" class="px-6 py-2 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-100">Registrar</a>
                 @endif
+
+                <!-- Botão para Autenticação OAuth2 -->
+                <a href="{{ route('oauth.login') }}" class="px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-green-500 hover:bg-green-600">Login com OAuth2</a>
             @endauth
         @endif
-
-        <!-- Botão para Autenticação OAuth2 -->
-        <a href="{{ route('oauth.login') }}" class="px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-green-500 hover:bg-green-600">Login com OAuth2</a>
     </div>
 </div>
 </body>
